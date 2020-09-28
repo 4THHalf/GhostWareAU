@@ -7,7 +7,7 @@ namespace Ghost {
 		void RenderMenu(bool* state)
 		{
 			ImGui::Begin("GhostWare - Among Us", state);
-			ImGui::SetWindowSize(ImVec2(400, 600));
+			ImGui::SetWindowSize(ImVec2(400, 600), ImGuiCond_FirstUseEver);
 
 			if (ImGui::CollapsingHeader("Game")) {
 				ImGui::Checkbox("Mark Impostors", &Ghost::State::MarkImpostors);
@@ -42,26 +42,38 @@ namespace Ghost {
 						ImGui::PopStyleColor(1);
 					}
 
-					/*if (ImGui::Button("Kick"))
-						Ghost::State::KickTarget = Ghost::State::SelectedPlayer;
+					if (GetGameState() == 2) {
+						std::string voteLabel;
+						if (Ghost::State::VoteTarget.has_value()) {
+							auto votePlayer = Ghost::State::VoteTarget.value();
+							auto votePlayerData = GetPlayerData(votePlayer);
+							auto votePlayerName = GetUTF8StringFromNETString(votePlayerData->fields.EKHEPECKPKK);
+							voteLabel = "Next Vote - " + votePlayerName;
+						}
+						else {
+							voteLabel = "Vote Off";
+						}
 
-					ImGui::SameLine();*/
+						if (ImGui::Button(voteLabel.c_str())) {
+							Ghost::State::VoteTarget = Ghost::State::SelectedPlayer;
+						}
 
-					std::string voteLabel;
-					if (Ghost::State::VoteTarget.has_value()) {
-						auto votePlayer = Ghost::State::VoteTarget.value();
-						auto votePlayerData = GetPlayerData(votePlayer);
-						auto votePlayerName = GetUTF8StringFromNETString(votePlayerData->fields.EKHEPECKPKK);
-						voteLabel = "Vote Off " + votePlayerName;
+						ImGui::SameLine();
 					}
-					else {
-						voteLabel = "Vote Off";
+
+					if (GetGameState() == 2) {
+						if (ImGui::Button("Murder"))
+							Ghost::State::MurderTarget = Ghost::State::SelectedPlayer;
+
+						ImGui::SameLine();
 					}
 
-					if (ImGui::Button(voteLabel.c_str()))
-						Ghost::State::VoteTarget = Ghost::State::SelectedPlayer;
+					if (GetGameState() == 2) {
+						if (ImGui::Button("Call Meeting") && Ghost::State::SelectedPlayer.has_value())
+							PlayerControl_CmdReportDeadBody(Ghost::State::SelectedPlayer.value(), NULL, NULL);
 
-					ImGui::SameLine();
+						ImGui::SameLine();
+					}
 
 					if (ImGui::Button("Teleport"))
 					{
@@ -73,13 +85,49 @@ namespace Ghost {
 						}
 					}
 
+					ImGui::Text("Message");
 					ImGui::SameLine();
-
-					if (ImGui::Button("Murder"))
-						Ghost::State::MurderTarget = Ghost::State::SelectedPlayer;
+					if (ImGui::InputText("##Message", Ghost::State::Message, IM_ARRAYSIZE(Ghost::State::Message), ImGuiInputTextFlags_EnterReturnsTrue)) {
+						if (Ghost::State::SelectedPlayer.has_value()) {
+							PlayerControl_RpcSendChat(Ghost::State::SelectedPlayer.value(), CreateNETStringFromANSI(Ghost::State::Message), NULL);
+							Ghost::State::Message[0] = '\0';
+						}
+					}
 				}
 			}
 
+			if ((*PlayerControl__TypeInfo).static_fields->LocalPlayer != NULL
+				&& GetPlayerData((*PlayerControl__TypeInfo).static_fields->LocalPlayer) != NULL
+				&& GetPlayerData((*PlayerControl__TypeInfo).static_fields->LocalPlayer)->fields.IHACFCJPFCF != NULL
+				&& ImGui::CollapsingHeader("Tasks")) {
+				List_1_GameData_CBOMPDNBEIF_* tasks = GetPlayerData((*PlayerControl__TypeInfo).static_fields->LocalPlayer)->fields.IHACFCJPFCF;
+
+				if (List_1_GameData_CBOMPDNBEIF__get_Count(tasks, NULL) > 0
+					&& ImGui::Button("Complete All Tasks")) {
+					for (int i = 0; i < List_1_GameData_CBOMPDNBEIF__get_Count(tasks, NULL); i++) {
+						GameData_CBOMPDNBEIF* task = List_1_GameData_CBOMPDNBEIF__get_Item(tasks, i, NULL);
+
+						if (!task->fields.MEAOHEIBBKN)
+							PlayerControl_RpcCompleteTask((*PlayerControl__TypeInfo).static_fields->LocalPlayer, task->fields.AKLEDCMKHMC, NULL);
+					}
+				}
+
+				ImGui::Spacing();
+
+				for (int i = 0; i < List_1_GameData_CBOMPDNBEIF__get_Count(tasks, NULL); i++) {
+					GameData_CBOMPDNBEIF* task = List_1_GameData_CBOMPDNBEIF__get_Item(tasks, i, NULL);
+
+					if (ImGui::Button(("Complete##Button" + std::to_string(task->fields.AKLEDCMKHMC)).c_str()) && !task->fields.MEAOHEIBBKN)
+						PlayerControl_RpcCompleteTask((*PlayerControl__TypeInfo).static_fields->LocalPlayer, task->fields.AKLEDCMKHMC, NULL);
+
+					ImGui::SameLine();
+
+					ImGui::TextColored(task->fields.MEAOHEIBBKN
+						? ImVec4(0.0F, 1.0F, 0.0F, 1.0F)
+						: AmongUsColorToImVec4((*KMGFBENDNFO__TypeInfo).static_fields->DMHEJEACLIG)
+						, (std::string("Task #") + std::to_string(task->fields.GOBCMBALOFC)).c_str());
+				}
+			}
 			ImGui::End();
 		}
 	}

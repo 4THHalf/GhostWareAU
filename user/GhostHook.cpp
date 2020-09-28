@@ -6,6 +6,9 @@ using namespace app;
 
 void (*oKeyboardJoystick_Update)(KeyboardJoystick*, MethodInfo*);
 void (*oMeetingHud_Update)(MeetingHud*, MethodInfo*);
+HatBehaviour__Array* (*oHatManager_GetUnlockedHats)(HatManager*, MethodInfo*);
+PetBehaviour__Array* (*oHatManager_GetUnlockedPets)(HatManager*, MethodInfo*);
+SkinData__Array* (*oHatManager_GetUnlockedSkins)(HatManager*, MethodInfo*);
 
 ID3D11Device* pDevice;
 ID3D11DeviceContext* pContext;
@@ -79,6 +82,17 @@ void dKeyboardJoyststick_Update(KeyboardJoystick* __this, MethodInfo* method) {
 		Ghost::State::VoteTarget = std::nullopt;
 		Ghost::State::KickTarget = std::nullopt;
 	}
+
+	/*ShipStatus* shipStatus = (*ShipStatus__TypeInfo).static_fields->Instance;
+	if (shipStatus != NULL) {
+		PlainShipRoom__Array* plainShipRooms = ShipStatus_get_AllRooms(shipStatus, NULL);
+		if (plainShipRooms == NULL) {
+			std::cout << "No Rooms" << std::endl;
+		}
+		else {
+			std::cout << plainShipRooms->max_length << std::endl;
+		}
+	}*/
 
 	/*if (GetGameState() == 1 || GetGameState() == 2) {
 		if (Ghost::State::KickTarget.has_value()) {
@@ -164,6 +178,18 @@ void dMeetingHud_Update(MeetingHud* __this, MethodInfo* method) {
 	oMeetingHud_Update(__this, method);
 }
 
+HatBehaviour__Array* dHatManager_GetUnlockedHats(HatManager* __this, MethodInfo* method) {
+	return __this->fields.AllHats->fields._items;
+}
+
+PetBehaviour__Array* dHatManager_GetUnlockedPets(HatManager* __this, MethodInfo* method) {
+	return __this->fields.AllPets->fields._items;
+}
+
+SkinData__Array* dHatManager_GetUnlockedSkins(HatManager* __this, MethodInfo* method) {
+	return __this->fields.AllSkins->fields._items;
+}
+
 bool HookFunction(PVOID* ppPointer, PVOID pDetour, const char* functionName) {
 	LONG err = DetourAttach(ppPointer, pDetour);
 	if (err != 0) {
@@ -179,6 +205,9 @@ bool HookFunction(PVOID* ppPointer, PVOID pDetour, const char* functionName) {
 void HookInitilization() {
 	oKeyboardJoystick_Update = KeyboardJoystick_Update;
 	oMeetingHud_Update = MeetingHud_Update;
+	oHatManager_GetUnlockedHats = HatManager_GetUnlockedHats;
+	oHatManager_GetUnlockedPets = HatManager_GetUnlockedPets;
+	oHatManager_GetUnlockedSkins = HatManager_GetUnlockedSkins;
 
 	DetourTransactionBegin();
 	DetourUpdateThread(GetCurrentThread());
@@ -187,6 +216,15 @@ void HookInitilization() {
 		return;
 
 	if (!HookFunction(&(PVOID&)oMeetingHud_Update, dMeetingHud_Update, "MeetingHud_Update"))
+		return;
+
+	if (!HookFunction(&(PVOID&)oHatManager_GetUnlockedHats, dHatManager_GetUnlockedHats, "HatManager_GetUnlockedHats"))
+		return;
+
+	if (!HookFunction(&(PVOID&)oHatManager_GetUnlockedPets, dHatManager_GetUnlockedPets, "HatManager_GetUnlockedPets"))
+		return;
+
+	if (!HookFunction(&(PVOID&)oHatManager_GetUnlockedSkins, dHatManager_GetUnlockedSkins, "HatManager_GetUnlockedSkins"))
 		return;
 
 	if (kiero::init(kiero::RenderType::D3D11) == kiero::Status::Success) {

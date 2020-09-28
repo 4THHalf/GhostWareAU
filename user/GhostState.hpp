@@ -15,6 +15,8 @@ namespace Ghost {
 		extern bool ShowRadar;
 		extern bool MarkImpostors;
 
+		extern char Message[256];
+
 		extern std::optional<PlayerControl*> SelectedPlayer;
 		extern std::optional<PlayerControl*> MurderTarget;
 		extern std::optional<PlayerControl*> VoteTarget;

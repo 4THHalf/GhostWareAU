@@ -18,6 +18,16 @@ std::string GetUTF8StringFromNETString(app::String* netString)
 	return newString;
 }
 
+app::String* CreateNETStringFromANSI(const char* string)
+{
+	return app::Marshal_PtrToStringAnsi((void*)string, NULL);
+}
+
+app::String* CreateNETStringFromUTF8(const char* string)
+{
+	return app::Marshal_PtrToStringUni((void*)string, NULL);
+}
+
 app::GameData_IHEKEPMDGIJ* GetPlayerData(app::PlayerControl* player) {
 	return app::PlayerControl_get_Data(player, NULL);
 }
@@ -35,10 +45,8 @@ std::vector<app::PlayerControl*> GetAllPlayers()
 }
 
 app::GameData_IHEKEPMDGIJ* GetPlayerData(int8_t playerId) {
-	for (auto player : GetAllPlayers()) {
-		auto playerData = GetPlayerData(player);
-		if (playerData->fields.FIOIBHIDDOC == playerId)
-			return playerData;
+	if ((*app::GameData__TypeInfo).static_fields->Instance != NULL) {
+		return app::GameData_GetPlayerById((*app::GameData__TypeInfo).static_fields->Instance, playerId, NULL);
 	}
 	return NULL;
 }

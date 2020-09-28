@@ -8,6 +8,8 @@
 #include <imgui.h>
 
 std::string GetUTF8StringFromNETString(app::String* netString);
+app::String* CreateNETStringFromANSI(const char* string);
+app::String* CreateNETStringFromUTF8(const char* string);
 app::GameData_IHEKEPMDGIJ* GetPlayerData(app::PlayerControl* player);
 std::vector<app::PlayerControl*> GetAllPlayers();
 app::GameData_IHEKEPMDGIJ* GetPlayerData(int8_t playerId);
