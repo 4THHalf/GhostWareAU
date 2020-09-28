@@ -45,8 +45,10 @@ std::vector<app::PlayerControl*> GetAllPlayers()
 }
 
 app::GameData_IHEKEPMDGIJ* GetPlayerData(int8_t playerId) {
-	if ((*app::GameData__TypeInfo).static_fields->Instance != NULL) {
-		return app::GameData_GetPlayerById((*app::GameData__TypeInfo).static_fields->Instance, playerId, NULL);
+	for (auto player : GetAllPlayers()) {
+		auto playerData = GetPlayerData(player);
+		if (playerData->fields.FIOIBHIDDOC == playerId)
+			return playerData;
 	}
 	return NULL;
 }
