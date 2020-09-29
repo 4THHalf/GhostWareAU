@@ -6,6 +6,7 @@ using namespace app;
 
 void (*oKeyboardJoystick_Update)(KeyboardJoystick*, MethodInfo*);
 void (*oMeetingHud_Update)(MeetingHud*, MethodInfo*);
+void (*oPlayerControl_FixedUpdate)(PlayerControl*, MethodInfo*);
 HatBehaviour__Array* (*oHatManager_GetUnlockedHats)(HatManager*, MethodInfo*);
 PetBehaviour__Array* (*oHatManager_GetUnlockedPets)(HatManager*, MethodInfo*);
 SkinData__Array* (*oHatManager_GetUnlockedSkins)(HatManager*, MethodInfo*);
@@ -83,35 +84,6 @@ void dKeyboardJoyststick_Update(KeyboardJoystick* __this, MethodInfo* method) {
 		Ghost::State::KickTarget = std::nullopt;
 	}
 
-	/*ShipStatus* shipStatus = (*ShipStatus__TypeInfo).static_fields->Instance;
-	if (shipStatus != NULL) {
-		PlainShipRoom__Array* plainShipRooms = ShipStatus_get_AllRooms(shipStatus, NULL);
-		if (plainShipRooms == NULL) {
-			std::cout << "No Rooms" << std::endl;
-		}
-		else {
-			std::cout << plainShipRooms->max_length << std::endl;
-		}
-	}*/
-
-	/*if (GetGameState() == 1 || GetGameState() == 2) {
-		if (Ghost::State::KickTarget.has_value()) {
-			VoteBanSystem* vbSystem = (*VoteBanSystem__TypeInfo).static_fields->Instance;
-			InnerNetClient* net = (InnerNetClient*)(*AmongUsClient__TypeInfo).static_fields->Instance;
-
-			int32_t targetId = InnerNetClient_GetClientIdFromCharacter(net, (InnerNetObject*)Ghost::State::KickTarget.value(), NULL);
-			int32_t selfId = net->fields.ClientId;
-
-			for (auto player : GetAllPlayers()) {
-				net->fields.ClientId = InnerNetClient_GetClientIdFromCharacter(net, (InnerNetObject*)player, NULL);
-				VoteBanSystem_CmdAddVote(vbSystem, targetId, NULL);
-			}
-
-			net->fields.ClientId = selfId;
-			Ghost::State::KickTarget = std::nullopt;
-		}
-	}*/
-
 	if (GetGameState() == 2) {
 		if (Ghost::State::MurderTarget.has_value()) {
 			for (auto player : GetAllPlayers()) {
@@ -124,15 +96,17 @@ void dKeyboardJoyststick_Update(KeyboardJoystick* __this, MethodInfo* method) {
 		}
 	}
 
-	if (Ghost::State::MarkImpostors) {
-		for (auto player : GetAllPlayers()) {
-			auto playerData = GetPlayerData(player);
-			TextRenderer* nameText = (TextRenderer*)player->fields.RemainingEmergencies;
-			nameText->fields.Color = (playerData->fields.LODLBBJNGKB)
-				? (*KMGFBENDNFO__TypeInfo).static_fields->MLKIANEMBLC
-				: (*KMGFBENDNFO__TypeInfo).static_fields->OOJBHAIPPHP;
+	/*if (GetGameState() == 2) {
+		if (Ghost::State::MarkImpostors) {
+			for (auto player : GetAllPlayers()) {
+				auto playerData = GetPlayerData(player);
+				TextRenderer* nameText = (TextRenderer*)player->fields.RemainingEmergencies;
+				nameText->fields.Color = (playerData->fields.LODLBBJNGKB)
+					? (*KMGFBENDNFO__TypeInfo).static_fields->MLKIANEMBLC
+					: (*KMGFBENDNFO__TypeInfo).static_fields->OOJBHAIPPHP;
+			}
 		}
-	}
+	}*/
 
 	oKeyboardJoystick_Update(__this, method);
 }
@@ -156,11 +130,10 @@ void dMeetingHud_Update(MeetingHud* __this, MethodInfo* method) {
 		}
 	}
 
-	if (Ghost::State::VoteTarget.has_value() && state == 3 )
+	if (Ghost::State::VoteTarget.has_value() && state == 3)
 	{
 		Ghost::State::VoteTarget = std::nullopt;
 	}
-	
 
 	if (Ghost::State::MarkImpostors) {
 		PlayerVoteArea__Array* playerStates = (PlayerVoteArea__Array*)(__this->fields.SkipVoteButton);
@@ -176,6 +149,22 @@ void dMeetingHud_Update(MeetingHud* __this, MethodInfo* method) {
 	}
 
 	oMeetingHud_Update(__this, method);
+}
+
+void dPlayerControl_FixedUpdate(PlayerControl* __this, MethodInfo* method) {
+	if (GetGameState() == 2) {
+		if (Ghost::State::MarkImpostors) {
+			auto playerData = GetPlayerData(__this);
+			if (playerData != NULL) {
+				TextRenderer* nameText = (TextRenderer*)__this->fields.RemainingEmergencies;
+				nameText->fields.Color = (playerData->fields.LODLBBJNGKB)
+					? (*KMGFBENDNFO__TypeInfo).static_fields->MLKIANEMBLC
+					: (*KMGFBENDNFO__TypeInfo).static_fields->OOJBHAIPPHP;
+			}
+		}
+	}
+
+	oPlayerControl_FixedUpdate(__this, method);
 }
 
 HatBehaviour__Array* dHatManager_GetUnlockedHats(HatManager* __this, MethodInfo* method) {
@@ -205,6 +194,7 @@ bool HookFunction(PVOID* ppPointer, PVOID pDetour, const char* functionName) {
 void HookInitilization() {
 	oKeyboardJoystick_Update = KeyboardJoystick_Update;
 	oMeetingHud_Update = MeetingHud_Update;
+	oPlayerControl_FixedUpdate = PlayerControl_FixedUpdate;
 	oHatManager_GetUnlockedHats = HatManager_GetUnlockedHats;
 	oHatManager_GetUnlockedPets = HatManager_GetUnlockedPets;
 	oHatManager_GetUnlockedSkins = HatManager_GetUnlockedSkins;
@@ -216,6 +206,9 @@ void HookInitilization() {
 		return;
 
 	if (!HookFunction(&(PVOID&)oMeetingHud_Update, dMeetingHud_Update, "MeetingHud_Update"))
+		return;
+
+	if (!HookFunction(&(PVOID&)oPlayerControl_FixedUpdate, dPlayerControl_FixedUpdate, "PlayerControl_FixedUpdate"))
 		return;
 
 	if (!HookFunction(&(PVOID&)oHatManager_GetUnlockedHats, dHatManager_GetUnlockedHats, "HatManager_GetUnlockedHats"))

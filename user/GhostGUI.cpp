@@ -95,11 +95,12 @@ namespace Ghost {
 					}
 				}
 			}
-
-			if ((*PlayerControl__TypeInfo).static_fields->LocalPlayer != NULL
+			
+			if (ImGui::CollapsingHeader("Tasks")
+				&& (*PlayerControl__TypeInfo).static_fields->LocalPlayer != NULL
 				&& GetPlayerData((*PlayerControl__TypeInfo).static_fields->LocalPlayer) != NULL
-				&& GetPlayerData((*PlayerControl__TypeInfo).static_fields->LocalPlayer)->fields.IHACFCJPFCF != NULL
-				&& ImGui::CollapsingHeader("Tasks")) {
+				&& GetPlayerData((*PlayerControl__TypeInfo).static_fields->LocalPlayer)->fields.IHACFCJPFCF != NULL) {
+
 				List_1_GameData_CBOMPDNBEIF_* tasks = GetPlayerData((*PlayerControl__TypeInfo).static_fields->LocalPlayer)->fields.IHACFCJPFCF;
 
 				if (List_1_GameData_CBOMPDNBEIF__get_Count(tasks, NULL) > 0
@@ -125,7 +126,7 @@ namespace Ghost {
 					ImGui::TextColored(task->fields.MEAOHEIBBKN
 						? ImVec4(0.0F, 1.0F, 0.0F, 1.0F)
 						: AmongUsColorToImVec4((*KMGFBENDNFO__TypeInfo).static_fields->DMHEJEACLIG)
-						, (std::string("Task #") + std::to_string(task->fields.GOBCMBALOFC)).c_str());
+						, (std::string("Task #") + std::to_string(task->fields.AKLEDCMKHMC)).c_str());
 				}
 			}
 			ImGui::End();
